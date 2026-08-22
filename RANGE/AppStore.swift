@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 
 enum AppTab: Int, CaseIterable {
-    case disclaimer, intensity, language
+    case disclaimer, language, intensity
 }
 
 enum Panel {
@@ -30,13 +30,22 @@ enum AppLanguage: String, CaseIterable {
     }
 }
 
+enum Copy {
+    static let brand = "LASAL"
+    static let disclaimer = """
+    LASAL is a supplement to help people with visual impairment sense proximity to objects. It is not a replacement for other visual aids and should be used in tandem.
+
+    Double tap to start or stop the program. Swipe up to change the menu, swipe left or right to adjust the settings relevant to the menu.
+    """
+}
+
 final class AppStore: ObservableObject {
     @Published var tab: AppTab = .disclaimer
     @Published var panel: Panel = .stack
     @Published var intensity: Int = 3
     @Published var language: AppLanguage = .en
     @Published var sensing = false
-    @Published var disclaimer: String = UserDefaults.standard.string(forKey: "range.disclaimer") ?? ""
+    @Published var disclaimer: String = UserDefaults.standard.string(forKey: "lasal.disclaimer") ?? Copy.disclaimer
     @Published var debug = false
 
     func nextTab() {
@@ -52,9 +61,13 @@ final class AppStore: ObservableObject {
     func openPicker() {
         if tab == .intensity { panel = .intensity }
         if tab == .language { panel = .language }
+        if tab == .disclaimer {
+            tab = .language
+            panel = .language
+        }
     }
 
     func saveDisclaimer() {
-        UserDefaults.standard.set(disclaimer, forKey: "range.disclaimer")
+        UserDefaults.standard.set(disclaimer, forKey: "lasal.disclaimer")
     }
 }

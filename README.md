@@ -1,36 +1,22 @@
-# RANGE
+# LASAL
 
-Full-screen swipe iPhone app (arm64, iOS 17+) with spoken pages, intensity / language rollers, and LiDAR sensing.
+Full-screen swipe iPhone app (arm64, iOS 17+) that helps people with visual impairment sense proximity to objects.
 
-## Open in Xcode
-
-1. Download the ZIP from this repo (Code → Download ZIP) or clone it.
-2. Unzip. You should see `RANGE.xcodeproj` next to a `RANGE` folder.
-3. Double-click **RANGE.xcodeproj** (Xcode 15 or later).
-4. In the toolbar, choose the **RANGE** scheme and an **iPhone simulator** or a plugged-in iPhone.
-5. Select the RANGE target → **Signing & Capabilities**.
-6. Check **Automatically manage signing** and pick your **Team** (Apple ID).
-7. Press **Run** (⌘R).
-
-### If it still says Build Failed
-
-Xcode’s error is almost always one of these:
-
-| Message | Fix |
-|---|---|
-| Signing for "RANGE" requires a development team | Target → Signing & Capabilities → Team → your Apple ID |
-| Failed to register bundle identifier | Change the bundle ID to something unique, e.g. `com.yourname.range` |
-| Requires a device with arkit | Use this latest project — Simulator is allowed |
-| No such module ARKit | Xcode Settings → Platforms → install **iOS 17+** |
-| App icon unassigned | Product → Clean Build Folder, then Run again |
-
-True LiDAR depth uses ARKit `sceneDepth` on **iPhone 12 Pro and later**. Other iPhones and the Simulator fall back to AR feature points.
+Home-screen name: **LASAL**. Open `RANGE.xcodeproj` (Xcode target name is unchanged so signing stays put).
 
 ## Gestures
 
-- Swipe down — next page (Disclaimer → Intensity → Language → loop)
-- Swipe up — previous page
-- Swipe right — open intensity (1–5) or language (Chinese / English / Hindi) roller
-- Swipe left — return to the stack
+- Swipe up — next page (Disclaimer → Language → Intensity → loop)
+- Swipe down — previous page
+- Swipe left — language / intensity settings
+- Swipe right — back to the menu
 - Double tap — start / stop LiDAR sensing
+- Press and hold — repeat the current page narration
 - Hold both volume keys 2 seconds — debug
+
+## Open in Xcode
+
+1. Download the ZIP or clone this repo.
+2. Open **RANGE.xcodeproj**.
+3. Signing & Capabilities → Team → your Apple ID.
+4. Run on a simulator or a plugged-in iPhone.
