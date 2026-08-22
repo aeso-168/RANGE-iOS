@@ -34,39 +34,55 @@ final class LidarSession: NSObject, ObservableObject, ARSessionDelegate {
         session.run(config, options: [.resetTracking, .removeExistingAnchors])
         silent?.play()
         running = true
-        UIApplication.shared.isIdleTimerDisabled = true
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
     }
 
     func stop() {
         session.pause()
         silent?.pause()
         running = false
-        UIApplication.shared.isIdleTimerDisabled = false
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
         endBackground()
     }
 
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        if let depth = frame.sceneDepth?.depthMap {
-            hasSceneDepth = true
-            distance = medianDepth(depth)
-        } else if let pts = frame.rawFeaturePoints, pts.points.count > 0 {
+        var next = distance
+        var depth = hasSceneDepth
+        if let map = frame.sceneDepth?.depthMap {
+            depth = true
+            next = medianDepth(map)
+        } else if let pts = frame.rawFeaturePoints, !pts.points.isEmpty {
             let zs = pts.points.prefix(80).map { Double(abs($0.z)) }
-            distance = zs.reduce(0, +) / Double(max(zs.count, 1))
+            next = zs.reduce(0, +) / Double(max(zs.count, 1))
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.hasSceneDepth = depth
+            self?.distance = next
         }
     }
 
     func enterBackground() {
         guard running else { return }
-        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "RANGE-sensing") { [weak self] in
-            self?.endBackground()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "RANGE-sensing") { [weak self] in
+                self?.endBackground()
+            }
+            self.silent?.play()
         }
-        silent?.play()
     }
 
     private func endBackground() {
-        if backgroundTask != .invalid {
-            UIApplication.shared.endBackgroundTask(backgroundTask)
-            backgroundTask = .invalid
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if self.backgroundTask != .invalid {
+                UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                self.backgroundTask = .invalid
+            }
         }
     }
 
@@ -113,6 +129,11 @@ private extension UInt16 {
 
 private extension UInt32 {
     var le: [UInt8] {
-        [UInt8(self & 0xff), UInt8((self >> 8) & 0xff), UInt8((self >> 16) & 0xff), UInt8((self >> 24) & 0xff)]
+        [
+            UInt8(self & 0xff),
+            UInt8((self >> 8) & 0xff),
+            UInt8((self >> 16) & 0xff),
+            UInt8((self >> 24) & 0xff)
+        ]
     }
 }
