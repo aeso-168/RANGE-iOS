@@ -6,12 +6,9 @@ struct RANGEApp: App {
     @StateObject private var store = AppStore()
 
     init() {
-        try? AVAudioSession.sharedInstance().setCategory(
-            .playback,
-            mode: .spokenAudio,
-            options: [.mixWithOthers, .duckOthers]
-        )
-        try? AVAudioSession.sharedInstance().setActive(true)
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .spokenAudio, options: [.mixWithOthers, .duckOthers])
+        try? session.setActive(true)
     }
 
     var body: some Scene {
@@ -19,7 +16,7 @@ struct RANGEApp: App {
             ContentView()
                 .environmentObject(store)
                 .preferredColorScheme(.dark)
-                .statusBarHidden(true)
+                .persistentSystemOverlays(.hidden)
         }
     }
 }
