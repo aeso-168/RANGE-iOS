@@ -112,7 +112,7 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
-				ORGANIZATIONNAME = RANGE;
+				ORGANIZATIONNAME = LASAL;
 				TargetAttributes = {
 					8A1400000000000000000001 = {
 						CreatedOnToolsVersion = 15.0;
@@ -231,9 +231,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RANGE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RANGE;
+				INFOPLIST_KEY_CFBundleDisplayName = LASAL;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSCameraUsageDescription = "RANGE uses the camera and LiDAR sensor to measure depth while sensing is running.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "LASAL uses the camera and LiDAR sensor to measure depth while sensing is running.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
@@ -267,9 +267,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RANGE/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RANGE;
+				INFOPLIST_KEY_CFBundleDisplayName = LASAL;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSCameraUsageDescription = "RANGE uses the camera and LiDAR sensor to measure depth while sensing is running.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "LASAL uses the camera and LiDAR sensor to measure depth while sensing is running.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
