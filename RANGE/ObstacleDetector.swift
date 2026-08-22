@@ -76,12 +76,6 @@ final class ObstacleDetector: NSObject, ARSessionDelegate, ObservableObject {
     }
 
     func startSession() {
-        guard ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) else {
-            print("No LiDAR/scene depth")
-            hasSceneDepth = false
-            // Still run world tracking so the 3x3 grid can fall back later.
-        }
-
         let config = ARWorldTrackingConfiguration()
         if ARWorldTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
             config.frameSemantics = .smoothedSceneDepth
@@ -89,6 +83,9 @@ final class ObstacleDetector: NSObject, ARSessionDelegate, ObservableObject {
         } else if ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) {
             config.frameSemantics = .sceneDepth
             hasSceneDepth = true
+        } else {
+            print("No LiDAR/scene depth")
+            hasSceneDepth = false
         }
         session.run(config)
         silent?.play()
