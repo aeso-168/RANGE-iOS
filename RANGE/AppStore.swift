@@ -28,24 +28,58 @@ enum AppLanguage: String, CaseIterable {
         case .hi: return ("Hindi", "印地语", "हिन्दी")
         }
     }
+
+    static func fromSystem() -> AppLanguage {
+        let preferred = (Locale.preferredLanguages.first ?? Locale.current.identifier).lowercased()
+        if preferred.hasPrefix("zh") { return .zh }
+        if preferred.hasPrefix("hi") { return .hi }
+        return .en
+    }
+
+    static func resolved() -> AppLanguage {
+        if let raw = UserDefaults.standard.string(forKey: "lasal.language"),
+           let lang = AppLanguage(rawValue: raw) {
+            return lang
+        }
+        return fromSystem()
+    }
 }
 
 enum Copy {
     static let brand = "LASAL"
-    static let disclaimer = """
-    LASAL is a supplement to help people with visual impairment sense proximity to objects. It is not a replacement for other visual aids and should be used in tandem.
 
-    Double tap to start or stop the program. Swipe up to change the menu, swipe left or right to adjust the settings relevant to the menu.
-    """
+    static func disclaimer(for language: AppLanguage) -> String {
+        switch language {
+        case .en:
+            return """
+            LASAL is a supplement to help people with visual impairment sense proximity to objects. It is not a replacement for other visual aids and should be used in tandem.
+
+            Double tap to start or stop the program. Swipe up to change the menu, swipe left or right to adjust the settings relevant to the menu.
+            """
+        case .zh:
+            return """
+            LASAL 是帮助视障人士感知周围物体距离的辅助工具。它不能替代其他助视设备，应配合使用。
+
+            双击开始或停止程序。向上滑动切换菜单，向左或向右滑动调整当前菜单的设置。
+            """
+        case .hi:
+            return """
+            LASAL दृष्टिबाधित लोगों को वस्तुओं की निकटता समझने में मदद करने वाला पूरक है। यह अन्य दृश्य सहायक उपकरणों का विकल्प नहीं है और उनके साथ इस्तेमाल होना चाहिए।
+
+            प्रोग्राम शुरू या बंद करने के लिए डबल टैप करें। मेनू बदलने के लिए ऊपर स्वाइप करें, सेटिंग बदलने के लिए बाएँ या दाएँ स्वाइप करें।
+            """
+        }
+    }
 }
 
 final class AppStore: ObservableObject {
     @Published var tab: AppTab = .disclaimer
     @Published var panel: Panel = .stack
     @Published var intensity: Int = 3
-    @Published var language: AppLanguage = .en
+    @Published var language: AppLanguage = AppLanguage.resolved() {
+        didSet { UserDefaults.standard.set(language.rawValue, forKey: "lasal.language") }
+    }
     @Published var sensing = false
-    @Published var disclaimer: String = UserDefaults.standard.string(forKey: "lasal.disclaimer") ?? Copy.disclaimer
     @Published var debug = false
 
     func nextTab() {
@@ -61,9 +95,5 @@ final class AppStore: ObservableObject {
     func openPicker() {
         if tab == .intensity { panel = .intensity }
         if tab == .language { panel = .language }
-    }
-
-    func saveDisclaimer() {
-        UserDefaults.standard.set(disclaimer, forKey: "lasal.disclaimer")
     }
 }
