@@ -3,7 +3,7 @@ import UIKit
 
 struct ContentView: View {
     @EnvironmentObject var store: AppStore
-    @StateObject private var lidar = LidarSession()
+    @StateObject private var detector = ObstacleDetector()
 
     var body: some View {
         GeometryReader { geo in
@@ -22,7 +22,7 @@ struct ContentView: View {
                         .transition(.move(edge: .trailing))
                 }
                 if store.panel == .debug {
-                    DebugView(lidar: lidar)
+                    ObstacleDebugView(detector: detector)
                 }
 
                 VolumeRocker(onChord: toggleDebug)
@@ -39,9 +39,15 @@ struct ContentView: View {
             .onTapGesture(count: 2) { toggleSensing() }
             .onChange(of: store.tab) { _, _ in announce() }
             .onChange(of: store.panel) { _, _ in announce() }
-            .onAppear { announce() }
+            .onChange(of: store.intensity) { _, n in
+                detector.setVolumeFromIntensity(n)
+            }
+            .onAppear {
+                detector.setVolumeFromIntensity(store.intensity)
+                announce()
+            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                if store.sensing { lidar.enterBackground() }
+                if store.sensing { detector.enterBackground() }
             }
         }
         .environmentObject(store)
@@ -86,7 +92,12 @@ struct ContentView: View {
 
     private func toggleSensing() {
         store.sensing.toggle()
-        if store.sensing { lidar.start() } else { lidar.stop() }
+        if store.sensing {
+            detector.setVolumeFromIntensity(store.intensity)
+            detector.start()
+        } else {
+            detector.stop()
+        }
         let text = store.sensing
             ? (store.language == .zh ? "传感已开启" : store.language == .hi ? "सेंसिंग चालू" : "Sensing on")
             : (store.language == .zh ? "传感已关闭" : store.language == .hi ? "सेंसिंग बंद" : "Sensing off")
@@ -278,39 +289,6 @@ struct LanguageWheel: View {
                 Text("SWIPE RIGHT FOR BACK TO MENU").font(.system(size: 11)).tracking(1.4).foregroundStyle(.gray)
             }
             .foregroundStyle(.black)
-        }
-    }
-}
-
-struct DebugView: View {
-    @EnvironmentObject var store: AppStore
-    @ObservedObject var lidar: LidarSession
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("LASAL / SYS").font(.system(size: 11, design: .monospaced)).tracking(3).foregroundStyle(.gray)
-            Text("Debug").font(.system(size: 48, weight: .semibold))
-            Grid(alignment: .leading) {
-                row("Arch", "arm64")
-                row("Sensing", store.sensing ? "on" : "off")
-                row("LiDAR", lidar.hasSceneDepth ? "sceneDepth" : "feature points")
-                row("Distance", String(format: "%.2f m", lidar.distance))
-                row("Intensity", "\(store.intensity)")
-            }
-            .font(.system(size: 13, design: .monospaced))
-            Text("Dummy action log. Hold both volume keys for two seconds to leave.")
-                .font(.system(size: 13))
-                .foregroundStyle(.gray)
-            Spacer()
-        }
-        .padding(28)
-        .foregroundStyle(.white)
-        .background(Color.black.ignoresSafeArea())
-    }
-
-    func row(_ k: String, _ v: String) -> some View {
-        GridRow {
-            Text(k.uppercased()).foregroundStyle(.gray)
-            Text(v).gridColumnAlignment(.trailing)
         }
     }
 }

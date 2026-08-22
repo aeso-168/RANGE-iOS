@@ -13,6 +13,8 @@
 		8A1000000000000000000004 /* Announcer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000004 /* Announcer.swift */; };
 		8A1000000000000000000005 /* LidarSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000005 /* LidarSession.swift */; };
 		8A1000000000000000000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000006 /* Assets.xcassets */; };
+		8A1000000000000000000007 /* ObstacleDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000008 /* ObstacleDetector.swift */; };
+		8A1000000000000000000008 /* ObstacleDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000009 /* ObstacleDebugView.swift */; };
 		8A1000000000000000000010 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000010 /* ARKit.framework */; };
 		8A1000000000000000000011 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A1100000000000000000011 /* AVFoundation.framework */; };
 /* End PBXBuildFile section */
@@ -26,6 +28,8 @@
 		8A1100000000000000000005 /* LidarSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarSession.swift; sourceTree = "<group>"; };
 		8A1100000000000000000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A1100000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A1100000000000000000008 /* ObstacleDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleDetector.swift; sourceTree = "<group>"; };
+		8A1100000000000000000009 /* ObstacleDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleDebugView.swift; sourceTree = "<group>"; };
 		8A1100000000000000000010 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 		8A1100000000000000000011 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -59,6 +63,8 @@
 				8A1100000000000000000002 /* ContentView.swift */,
 				8A1100000000000000000003 /* AppStore.swift */,
 				8A1100000000000000000004 /* Announcer.swift */,
+				8A1100000000000000000008 /* ObstacleDetector.swift */,
+				8A1100000000000000000009 /* ObstacleDebugView.swift */,
 				8A1100000000000000000005 /* LidarSession.swift */,
 				8A1100000000000000000006 /* Assets.xcassets */,
 				8A1100000000000000000007 /* Info.plist */,
@@ -158,6 +164,8 @@
 				8A1000000000000000000003 /* AppStore.swift in Sources */,
 				8A1000000000000000000004 /* Announcer.swift in Sources */,
 				8A1000000000000000000005 /* LidarSession.swift in Sources */,
+				8A1000000000000000000007 /* ObstacleDetector.swift in Sources */,
+				8A1000000000000000000008 /* ObstacleDebugView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
