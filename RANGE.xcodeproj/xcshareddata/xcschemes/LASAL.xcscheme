@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8A1400000000000000000001"
-               BuildableName = "RANGE.app"
-               BlueprintName = "RANGE"
+               BuildableName = "LASAL.app"
+               BlueprintName = "LASAL"
                ReferencedContainer = "container:RANGE.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,8 +44,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8A1400000000000000000001"
-            BuildableName = "RANGE.app"
-            BlueprintName = "RANGE"
+            BuildableName = "LASAL.app"
+            BlueprintName = "LASAL"
             ReferencedContainer = "container:RANGE.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -61,8 +61,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8A1400000000000000000001"
-            BuildableName = "RANGE.app"
-            BlueprintName = "RANGE"
+            BuildableName = "LASAL.app"
+            BlueprintName = "LASAL"
             ReferencedContainer = "container:RANGE.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

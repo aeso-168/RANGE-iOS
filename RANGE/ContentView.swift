@@ -18,11 +18,11 @@ struct ContentView: View {
 
                 if store.panel == .intensity {
                     IntensityWheel()
-                        .transition(.move(edge: .leading))
+                        .transition(.move(edge: .trailing))
                 }
                 if store.panel == .language {
                     LanguageWheel()
-                        .transition(.move(edge: .leading))
+                        .transition(.move(edge: .trailing))
                 }
                 if store.panel == .debug {
                     DebugView(lidar: lidar)
@@ -31,11 +31,17 @@ struct ContentView: View {
                 VolumeRocker(upHeld: $upHeld, downHeld: $downHeld)
             }
             .gesture(swipe(size: geo.size))
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.52)
+                    .onEnded { _ in
+                        Announcer.page(store.tab, panel: store.panel, intensity: store.intensity, language: store.language, hold: true)
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    }
+            )
             .onTapGesture(count: 2) { toggleSensing() }
-            .onChange(of: store.tab) { _, tab in
-                if store.panel == .stack { Announcer.page(tab, language: store.language) }
-            }
-            .onAppear { Announcer.page(.disclaimer, language: store.language) }
+            .onChange(of: store.tab) { _, _ in announce() }
+            .onChange(of: store.panel) { _, _ in announce() }
+            .onAppear { announce() }
             .onChange(of: upHeld) { _, _ in considerChord() }
             .onChange(of: downHeld) { _, _ in considerChord() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
@@ -45,6 +51,11 @@ struct ContentView: View {
         .environmentObject(store)
     }
 
+    private func announce() {
+        if store.panel == .debug { return }
+        Announcer.page(store.tab, panel: store.panel, intensity: store.intensity, language: store.language)
+    }
+
     @ViewBuilder
     private func tabStack(size: CGSize) -> some View {
         Group {
@@ -52,9 +63,9 @@ struct ContentView: View {
             case .disclaimer:
                 DisclaimerView()
             case .intensity:
-                HubView(title: label(.intensity), value: numberLabel(store.intensity), hint: swipeRightHint)
+                HubView(title: label(.intensity), value: numberLabel(store.intensity), primary: hintPrimary, secondary: hintSecondary)
             case .language:
-                HubView(title: label(.language), value: langLabel(store.language), hint: swipeRightHint)
+                HubView(title: label(.language), value: langLabel(store.language), primary: hintPrimary, secondary: hintSecondary)
             }
         }
         .foregroundStyle(store.panel == .intensity || store.panel == .language ? Color.black : Color.white)
@@ -66,13 +77,12 @@ struct ContentView: View {
                 let dx = value.translation.width
                 let dy = value.translation.height
                 if abs(dy) > abs(dx) && store.panel == .stack {
-                    if dy > 70 { store.nextTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-                    else if dy < -70 { store.prevTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
+                    if dy < -70 { store.nextTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
+                    else if dy > 70 { store.prevTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
                 } else if abs(dx) > abs(dy) {
-                    if dx > 70 && store.panel == .stack { store.openPicker() }
-                    if dx < -70 && (store.panel == .intensity || store.panel == .language) {
+                    if dx < -70 && store.panel == .stack { store.openPicker() }
+                    if dx > 70 && (store.panel == .intensity || store.panel == .language) {
                         store.panel = .stack
-                        Announcer.page(store.tab, language: store.language)
                     }
                 }
             }
@@ -117,11 +127,7 @@ struct ContentView: View {
     }
 
     private func numberLabel(_ n: Int) -> String {
-        let en = ["One", "Two", "Three", "Four", "Five"]
-        let zh = ["一", "二", "三", "四", "五"]
-        let hi = ["एक", "दो", "तीन", "चार", "पाँच"]
-        let i = min(5, max(1, n)) - 1
-        return store.language == .zh ? zh[i] : store.language == .hi ? hi[i] : en[i]
+        Announcer.numberLabel(n, language: store.language)
     }
 
     private func langLabel(_ lang: AppLanguage) -> String {
@@ -132,11 +138,31 @@ struct ContentView: View {
         }
     }
 
-    private var swipeRightHint: String {
-        switch store.language {
-        case .en: return "SWIPE RIGHT TO SET"
-        case .zh: return "向右滑动以设置"
-        case .hi: return "सेट करने के लिए दाएँ स्वाइप करें"
+    private var hintPrimary: String {
+        switch (store.tab, store.language) {
+        case (.disclaimer, .en): return "Swipe left for language settings"
+        case (.disclaimer, .zh): return "向左滑动进入语言设置"
+        case (.disclaimer, .hi): return "भाषा सेटिंग के लिए बाएँ स्वाइप करें"
+        case (.language, .en): return "Swipe left for language selection"
+        case (.language, .zh): return "向左滑动选择语言"
+        case (.language, .hi): return "भाषा चुनने के लिए बाएँ स्वाइप करें"
+        case (.intensity, .en): return "Swipe left for intensity selection"
+        case (.intensity, .zh): return "向左滑动选择强度"
+        case (.intensity, .hi): return "तीव्रता चुनने के लिए बाएँ स्वाइप करें"
+        }
+    }
+
+    private var hintSecondary: String {
+        switch (store.tab, store.language) {
+        case (.disclaimer, .en): return "Swipe up for Language"
+        case (.disclaimer, .zh): return "向上滑动进入语言"
+        case (.disclaimer, .hi): return "भाषा के लिए ऊपर स्वाइप करें"
+        case (.language, .en): return "Swipe up for Intensity"
+        case (.language, .zh): return "向上滑动进入强度"
+        case (.language, .hi): return "तीव्रता के लिए ऊपर स्वाइप करें"
+        case (.intensity, .en): return "Swipe up for Disclaimer"
+        case (.intensity, .zh): return "向上滑动进入免责声明"
+        case (.intensity, .hi): return "अस्वीकरण के लिए ऊपर स्वाइप करें"
         }
     }
 }
@@ -144,31 +170,24 @@ struct ContentView: View {
 struct DisclaimerView: View {
     @EnvironmentObject var store: AppStore
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text("RANGE")
+        VStack(alignment: .leading, spacing: 18) {
+            Text(Copy.brand)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .tracking(4)
                 .foregroundStyle(.gray)
             Text(title)
-                .font(.system(size: 64, weight: .semibold, design: .default))
+                .font(.system(size: 56, weight: .semibold, design: .default))
                 .tracking(-2)
                 .textCase(.uppercase)
             TextEditor(text: $store.disclaimer)
                 .scrollContentBackground(.hidden)
-                .padding(14)
+                .padding(12)
+                .frame(height: 108)
                 .background(Color.white.opacity(0.06))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.18), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.18), lineWidth: 1))
                 .onChange(of: store.disclaimer) { _, _ in store.saveDisclaimer() }
             Spacer()
-            HStack {
-                Spacer()
-                VStack(spacing: 8) {
-                    Image(systemName: "chevron.down")
-                    Text(hint).font(.system(size: 11, weight: .medium)).tracking(2)
-                }
-                .foregroundStyle(.gray)
-                Spacer()
-            }
+            HintFooter(primary: primary, secondary: secondary)
         }
         .padding(.horizontal, 28)
         .padding(.top, 72)
@@ -178,41 +197,58 @@ struct DisclaimerView: View {
     private var title: String {
         store.language == .zh ? "免责声明" : store.language == .hi ? "अस्वीकरण" : "Disclaimer"
     }
-    private var hint: String {
-        store.language == .zh ? "向下滑动" : store.language == .hi ? "नीचे स्वाइप करें" : "SWIPE DOWN"
+    private var primary: String {
+        store.language == .zh ? "向左滑动进入语言设置" : store.language == .hi ? "भाषा सेटिंग के लिए बाएँ स्वाइप करें" : "Swipe left for language settings"
+    }
+    private var secondary: String {
+        store.language == .zh ? "向上滑动进入语言" : store.language == .hi ? "भाषा के लिए ऊपर स्वाइप करें" : "Swipe up for Language"
     }
 }
 
 struct HubView: View {
     var title: String
     var value: String
-    var hint: String
+    var primary: String
+    var secondary: String
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text("RANGE")
+        VStack(alignment: .leading, spacing: 18) {
+            Text(Copy.brand)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .tracking(4)
                 .foregroundStyle(.gray)
             Text(title)
-                .font(.system(size: 64, weight: .semibold))
+                .font(.system(size: 56, weight: .semibold))
                 .tracking(-2)
                 .textCase(.uppercase)
             Text(value)
                 .font(.system(size: 44, weight: .semibold))
             Spacer()
-            HStack {
-                Spacer()
-                VStack(spacing: 8) {
-                    Image(systemName: "chevron.down")
-                    Text(hint).font(.system(size: 11, weight: .medium)).tracking(2)
-                }
-                .foregroundStyle(.gray)
-                Spacer()
-            }
+            HintFooter(primary: primary, secondary: secondary)
         }
         .padding(.horizontal, 28)
         .padding(.top, 72)
         .padding(.bottom, 36)
+    }
+}
+
+struct HintFooter: View {
+    var primary: String
+    var secondary: String
+    var body: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: 8) {
+                Image(systemName: "chevron.up")
+                Text(primary)
+                Text(secondary)
+            }
+            .font(.system(size: 11, weight: .medium))
+            .tracking(1.4)
+            .multilineTextAlignment(.center)
+            .textCase(.uppercase)
+            .foregroundStyle(.gray)
+            Spacer()
+        }
     }
 }
 
@@ -230,7 +266,7 @@ struct IntensityWheel: View {
                 }
                 .pickerStyle(.wheel)
                 .onChange(of: store.intensity) { _, n in Announcer.number(n, language: store.language) }
-                Text("SWIPE LEFT TO RETURN").font(.system(size: 11)).tracking(2).foregroundStyle(.gray)
+                Text("SWIPE RIGHT FOR BACK TO MENU").font(.system(size: 11)).tracking(1.4).foregroundStyle(.gray)
             }
             .foregroundStyle(.black)
         }
@@ -254,7 +290,7 @@ struct LanguageWheel: View {
                 .onChange(of: store.language) { _, lang in
                     Announcer.speak(store.language == .zh ? lang.label.zh : store.language == .hi ? lang.label.hi : lang.label.en, language: lang)
                 }
-                Text("SWIPE LEFT TO RETURN").font(.system(size: 11)).tracking(2).foregroundStyle(.gray)
+                Text("SWIPE RIGHT FOR BACK TO MENU").font(.system(size: 11)).tracking(1.4).foregroundStyle(.gray)
             }
             .foregroundStyle(.black)
         }
@@ -266,7 +302,7 @@ struct DebugView: View {
     @ObservedObject var lidar: LidarSession
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("RANGE / SYS").font(.system(size: 11, design: .monospaced)).tracking(3).foregroundStyle(.gray)
+            Text("LASAL / SYS").font(.system(size: 11, design: .monospaced)).tracking(3).foregroundStyle(.gray)
             Text("Debug").font(.system(size: 48, weight: .semibold))
             Grid(alignment: .leading) {
                 row("Arch", "arm64")

@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 @main
-struct RANGEApp: App {
+struct LASALApp: App {
     @StateObject private var store = AppStore()
 
     init() {

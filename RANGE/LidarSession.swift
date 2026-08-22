@@ -69,7 +69,7 @@ final class LidarSession: NSObject, ObservableObject, ARSessionDelegate {
         guard running else { return }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "RANGE-sensing") { [weak self] in
+            self.backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "LASAL-sensing") { [weak self] in
                 self?.endBackground()
             }
             self.silent?.play()
