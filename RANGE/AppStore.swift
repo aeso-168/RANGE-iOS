@@ -61,10 +61,6 @@ final class AppStore: ObservableObject {
     func openPicker() {
         if tab == .intensity { panel = .intensity }
         if tab == .language { panel = .language }
-        if tab == .disclaimer {
-            tab = .language
-            panel = .language
-        }
     }
 
     func saveDisclaimer() {

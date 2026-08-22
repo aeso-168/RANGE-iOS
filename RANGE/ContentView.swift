@@ -4,9 +4,6 @@ import UIKit
 struct ContentView: View {
     @EnvironmentObject var store: AppStore
     @StateObject private var lidar = LidarSession()
-    @State private var upHeld = false
-    @State private var downHeld = false
-    @State private var holdStarted: Date?
 
     var body: some View {
         GeometryReader { geo in
@@ -28,12 +25,13 @@ struct ContentView: View {
                     DebugView(lidar: lidar)
                 }
 
-                VolumeRocker(upHeld: $upHeld, downHeld: $downHeld)
+                VolumeRocker(onChord: toggleDebug)
             }
             .gesture(swipe(size: geo.size))
             .simultaneousGesture(
                 LongPressGesture(minimumDuration: 0.52)
                     .onEnded { _ in
+                        if store.panel == .debug { return }
                         Announcer.page(store.tab, panel: store.panel, intensity: store.intensity, language: store.language, hold: true)
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }
@@ -42,8 +40,6 @@ struct ContentView: View {
             .onChange(of: store.tab) { _, _ in announce() }
             .onChange(of: store.panel) { _, _ in announce() }
             .onAppear { announce() }
-            .onChange(of: upHeld) { _, _ in considerChord() }
-            .onChange(of: downHeld) { _, _ in considerChord() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
                 if store.sensing { lidar.enterBackground() }
             }
@@ -80,7 +76,7 @@ struct ContentView: View {
                     if dy < -70 { store.nextTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
                     else if dy > 70 { store.prevTab(); UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
                 } else if abs(dx) > abs(dy) {
-                    if dx < -70 && store.panel == .stack { store.openPicker() }
+                    if dx < -70 && store.panel == .stack && store.tab != .disclaimer { store.openPicker() }
                     if dx > 70 && (store.panel == .intensity || store.panel == .language) {
                         store.panel = .stack
                     }
@@ -98,18 +94,9 @@ struct ContentView: View {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
     }
 
-    private func considerChord() {
-        if upHeld && downHeld {
-            if holdStarted == nil { holdStarted = Date() }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                guard upHeld, downHeld, let start = holdStarted, Date().timeIntervalSince(start) >= 1.95 else { return }
-                store.panel = store.panel == .debug ? .stack : .debug
-                Announcer.speak(store.language == .zh ? "调试" : store.language == .hi ? "डिबग" : "Debug mode", language: store.language)
-                holdStarted = nil
-            }
-        } else {
-            holdStarted = nil
-        }
+    private func toggleDebug() {
+        store.panel = store.panel == .debug ? .stack : .debug
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
     private func label(_ tab: AppTab) -> String {
@@ -179,15 +166,24 @@ struct DisclaimerView: View {
                 .font(.system(size: 56, weight: .semibold, design: .default))
                 .tracking(-2)
                 .textCase(.uppercase)
-            TextEditor(text: $store.disclaimer)
-                .scrollContentBackground(.hidden)
-                .padding(12)
-                .frame(height: 108)
-                .background(Color.white.opacity(0.06))
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.18), lineWidth: 1))
-                .onChange(of: store.disclaimer) { _, _ in store.saveDisclaimer() }
+            ZStack(alignment: .topLeading) {
+                Text(store.disclaimer.isEmpty ? " " : store.disclaimer)
+                    .font(.system(size: 13))
+                    .lineSpacing(5)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .hidden()
+                TextEditor(text: $store.disclaimer)
+                    .font(.system(size: 13))
+                    .scrollContentBackground(.hidden)
+                    .scrollDisabled(true)
+                    .padding(8)
+            }
+            .background(Color.white.opacity(0.06))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.18), lineWidth: 1))
+            .onChange(of: store.disclaimer) { _, _ in store.saveDisclaimer() }
             Spacer()
-            HintFooter(primary: primary, secondary: secondary)
+            HintFooter(secondary: secondary)
         }
         .padding(.horizontal, 28)
         .padding(.top, 72)
@@ -196,9 +192,6 @@ struct DisclaimerView: View {
 
     private var title: String {
         store.language == .zh ? "免责声明" : store.language == .hi ? "अस्वीकरण" : "Disclaimer"
-    }
-    private var primary: String {
-        store.language == .zh ? "向左滑动进入语言设置" : store.language == .hi ? "भाषा सेटिंग के लिए बाएँ स्वाइप करें" : "Swipe left for language settings"
     }
     private var secondary: String {
         store.language == .zh ? "向上滑动进入语言" : store.language == .hi ? "भाषा के लिए ऊपर स्वाइप करें" : "Swipe up for Language"
@@ -232,14 +225,14 @@ struct HubView: View {
 }
 
 struct HintFooter: View {
-    var primary: String
+    var primary: String = ""
     var secondary: String
     var body: some View {
         HStack {
             Spacer()
             VStack(spacing: 8) {
                 Image(systemName: "chevron.up")
-                Text(primary)
+                if !primary.isEmpty { Text(primary) }
                 Text(secondary)
             }
             .font(.system(size: 11, weight: .medium))
@@ -312,7 +305,7 @@ struct DebugView: View {
                 row("Intensity", "\(store.intensity)")
             }
             .font(.system(size: 13, design: .monospaced))
-            Text("True scene-depth LiDAR requires iPhone 12 Pro or later. Sensing stays alive in background via audio + ARKit.")
+            Text("Dummy action log. Hold both volume keys for two seconds to leave.")
                 .font(.system(size: 13))
                 .foregroundStyle(.gray)
             Spacer()
@@ -331,17 +324,24 @@ struct DebugView: View {
 }
 
 struct VolumeRocker: View {
-    @Binding var upHeld: Bool
-    @Binding var downHeld: Bool
+    var onChord: () -> Void
+    @GestureState private var pressing = false
+
     var body: some View {
-        VStack(spacing: 8) {
-            Capsule().fill(upHeld ? Color.white : Color.white.opacity(0.28)).frame(width: 8, height: 48)
-                .gesture(DragGesture(minimumDistance: 0).onChanged { _ in upHeld = true }.onEnded { _ in upHeld = false })
-            Capsule().fill(downHeld ? Color.white : Color.white.opacity(0.28)).frame(width: 8, height: 48)
-                .gesture(DragGesture(minimumDistance: 0).onChanged { _ in downHeld = true }.onEnded { _ in downHeld = false })
+        VStack(spacing: 6) {
+            Capsule().fill(pressing ? Color.white : Color.white.opacity(0.28)).frame(width: 8, height: 48)
+            Capsule().fill(pressing ? Color.white : Color.white.opacity(0.28)).frame(width: 8, height: 48)
         }
         .padding(.leading, 8)
+        .padding(.vertical, 12)
+        .padding(.trailing, 28)
+        .contentShape(Rectangle())
+        .highPriorityGesture(
+            LongPressGesture(minimumDuration: 2)
+                .updating($pressing) { current, state, _ in state = current }
+                .onEnded { _ in onChord() }
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(.top, 120)
+        .padding(.top, 110)
     }
 }
